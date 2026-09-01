@@ -561,4 +561,147 @@
                 // Filter
                 const filtered = tools.filter(t =>
                     t.name.toLowerCase().includes(lowerFilter) ||
-              
+                    t.desc.toLowerCase().includes(lowerFilter) ||
+                    t.cat.includes(lowerFilter)
+                );
+
+                // Build HTML
+                let html = '';
+                if (filtered.length === 0) {
+                    html = `<div class="no-results"><i class="fas fa-search"></i>No tools match your search</div>`;
+                } else {
+                    filtered.forEach(t => {
+                        // determine icon – some have custom mapping
+                        let iconClass = t.icon || 'fa-wrench';
+                        // fix for "PDF to Image" duplicate: use different icon for #6
+                        if (t.id === 6) iconClass = 'fa-images';
+                        if (t.id === 7) iconClass = 'fa-stamp';
+                        if (t.id === 8) iconClass = 'fa-brush';
+                        if (t.id === 10) iconClass = 'fa-arrow-up-arrow-down';
+                        if (t.id === 14) iconClass = 'fa-crop-simple';
+                        if (t.id === 17) iconClass = 'fa-wand-magic-sparkles';
+                        if (t.id === 22) iconClass = 'fa-align-left';
+                        if (t.id === 26) iconClass = 'fa-rotate';
+                        if (t.id === 27) iconClass = 'fa-lock';
+                        if (t.id === 28) iconClass = 'fa-tachometer-alt';
+                        if (t.id === 30) iconClass = 'fa-calendar-days';
+                        if (t.id === 31) iconClass = 'fa-hand-holding-dollar';
+                        if (t.id === 34) iconClass = 'fa-up-down';
+
+                        html += `
+                            <div class="tool-card" data-id="${t.id}">
+                                <span class="tool-num">${t.id}</span>
+                                <span class="tool-icon"><i class="fas ${iconClass}"></i></span>
+                                <span class="tool-info">
+                                    <span class="tool-name">${t.name}</span>
+                                    <span class="tool-desc">${t.desc}</span>
+                                </span>
+                                <span class="tool-arrow"><i class="fas fa-chevron-right"></i></span>
+                            </div>
+                        `;
+                    });
+                }
+
+                grid.innerHTML = html;
+
+                // Update category count badge (visible count after filter)
+                const countBadge = section.querySelector('.category-count');
+                if (countBadge) {
+                    const total = tools.length;
+                    const visible = filtered.length;
+                    countBadge.textContent = visible === total ? `${total} tools` : `${visible} / ${total} tools`;
+                }
+            });
+
+            // Update global stats
+            const totalVisible = document.querySelectorAll('.tool-card:not(.no-results)').length;
+            document.getElementById('visibleCount').textContent = totalVisible;
+        }
+
+        // ============================================================
+        //  SEARCH EVENT
+        // ============================================================
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+            renderTools(e.target.value);
+        });
+
+        // ============================================================
+        //  INIT
+        // ============================================================
+        renderTools('');
+
+        // ============================================================
+        //  (Optional) click on a card → show alert (placeholder action)
+        // ============================================================
+        document.addEventListener('click', (e) => {
+            const card = e.target.closest('.tool-card');
+            if (card) {
+                const name = card.querySelector('.tool-name')?.textContent || 'Tool';
+                // In a real app, you would route to the tool page.
+                // For demo, we show a friendly toast/alert.
+                // Using a non-intrusive alert replacement: a small floating message.
+                showFloatingMessage(`🔧 ${name} – coming soon!`);
+            }
+        });
+
+        // ============================================================
+        //  FLOATING TOAST
+        // ============================================================
+        function showFloatingMessage(msg) {
+            const existing = document.querySelector('.rk-toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'rk-toast';
+            toast.innerHTML = msg;
+            Object.assign(toast.style, {
+                position: 'fixed',
+                bottom: '30px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: '#0f172a',
+                color: '#f1f5f9',
+                padding: '14px 28px',
+                borderRadius: '60px',
+                fontSize: '15px',
+                fontWeight: '500',
+                boxShadow: '0 12px 32px rgba(0,0,0,0.25)',
+                zIndex: '9999',
+                fontFamily: 'Inter, sans-serif',
+                letterSpacing: '0.2px',
+                opacity: '0',
+                transition: 'opacity 0.25s ease, transform 0.25s ease',
+                transform: 'translateX(-50%) translateY(12px)',
+                pointerEvents: 'none',
+                maxWidth: '90%',
+                textAlign: 'center',
+            });
+            document.body.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(-50%) translateY(0)';
+            });
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(12px)';
+                setTimeout(() => toast.remove(), 350);
+            }, 2200);
+        }
+
+        // small style addition for toast
+        const styleToast = document.createElement('style');
+        styleToast.textContent = `
+            .rk-toast {
+                backdrop-filter: blur(6px);
+                background: rgba(15, 23, 42, 0.92) !important;
+                border: 1px solid rgba(255,255,255,0.08);
+            }
+        `;
+        document.head.appendChild(styleToast);
+    </script>
+
+</body>
+</html>
